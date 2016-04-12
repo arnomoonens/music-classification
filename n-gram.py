@@ -29,7 +29,10 @@ def generate_ngram(path):
 
     # First caculate the note length
     # To calculate the note length: subtract time of uneven rows by time of even rows
-    df = pandas.DataFrame({'note length': df[1:N:2]['time'].values - df[:N:2]['time'].values, 'pitch': df[1:N:2]['pitch']})
+    df = pandas.DataFrame({
+                          'note length': df[1:N:2]['time'].values - df[:N:2]['time'].values,
+                          'pitch': df[1:N:2]['pitch']
+                          })
 
     df['pitch'] = df.shift(-1)['pitch'] - df['pitch']
     df.set_value(N-1, 'pitch', 0)
