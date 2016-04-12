@@ -36,7 +36,7 @@ def generate_ngram(path):
 
     df['note length'] = np.round(np.log2(df.shift(-1)['note length']/df['note length']))
     df.set_value(N-1, 'note length', 0)
-    return df.reset_index()
+    return df.reset_index(drop=True)
 
 if __name__ == "__main__":
     if len(sys.argv) < 3:
