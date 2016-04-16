@@ -7,6 +7,9 @@ import numpy as np
 from os import listdir
 from os.path import isfile, join
 
+def round_down(num, divisor):
+	return num - (num%divisor)
+
 def generate_ngram(path):
     rows_to_skip = 0
     with open(path, "r") as f:
@@ -37,8 +40,9 @@ def generate_ngram(path):
     df['pitch'] = df.shift(-1)['pitch'] - df['pitch']
     df.set_value(N-1, 'pitch', 0)
 
-    df['note length'] = np.round(np.log2(df.shift(-1)['note length']/df['note length']))
+    df['note length'] = round_down(np.log2(df.shift(-1)['note length']/df['note length']), 0.2)
     df.set_value(N-1, 'note length', 0)
+    df = df.round(1)
     return df.reset_index(drop=True)
 
 if __name__ == "__main__":
