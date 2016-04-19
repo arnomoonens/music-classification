@@ -1,56 +1,42 @@
 #!/usr/bin/env python
 
 import sys
-import pandas
+import pandas as pd
 import itertools
 import numpy as np
 from os import listdir
 from os.path import isfile, join
 
-def round_down(num, divisor):
-	return num - (num%divisor)
-
-def generate_ngram(path):
-    rows_to_skip = 0
-    with open(path, "r") as f:
-        while "Note_on_c" not in f.readline():
-            rows_to_skip += 1
-
-    # error_bad_lines=False to skip unnecessary and unparseable information.
-    # The last 2 lines however, are also unnecessary, but the parameter to skip those
-    # (skipfooter) can't be used with the C engine, while error_bad_lines can't be used
-    # with the python engine. As such, we skip the last 2 lines manually by reducing N.
-    df = pandas.read_csv(path,
-                         skiprows=rows_to_skip,
-                         error_bad_lines=False,
-                         #skipfooter=2,
-                         #engine='python',
-                         header=None,
-                         usecols=[1,4],
-                         names=["time", "pitch"])
-    N = len(df.index)-2 #Don't use the last 2 lines, as discussed above
-
-    # First caculate the note length
-    # To calculate the note length: subtract time of uneven rows by time of even rows
-    df = pandas.DataFrame({
-                          'note length': df[1:N:2]['time'].values - df[:N:2]['time'].values,
-                          'pitch': df[1:N:2]['pitch']
-                          })
-
-    df['pitch'] = df.shift(-1)['pitch'] - df['pitch']
-    df.set_value(N-1, 'pitch', 0)
-
-    df['note length'] = round_down(np.log2(df.shift(-1)['note length']/df['note length']), 0.2)
-    df.set_value(N-1, 'note length', 0)
-    df = df.round(1)
-    return df.reset_index(drop=True)
+def generate_ngram(df, n, content='--both'):
+	if content == '--both':
+		ngram = np.zeros((len(df)-n+1, n*2))
+		for i in range(len(df)-n+1):
+			nlength = np.array(df['note length'].iloc[i:i+n])
+			pitch = np.array(df['pitch'].iloc[i:i+n])
+			gram = np.append(nlength, pitch)
+			ngram[i] = gram
+	elif content == '--length':
+		ngram = np.zeros((len(df)-n+1, n))
+		for i in range(len(df)-n+1):
+			nlength = np.array(df['note length'].iloc[i:i+n])
+			ngram[i] = nlength
+	elif content == "--pitch":
+		ngram = np.zeros((len(df)-n+1, n))
+		for i in range(len(df)-n+1):
+			pitch = np.array(df['pitch'].iloc[i:i+n])
+			ngram[i] = pitch
+	return ngram
 
 if __name__ == "__main__":
-    if len(sys.argv) < 3:
-        print("Please provide a source and output folder.")
+    if len(sys.argv) < 4:
+        print("Please provide a unigram source file, a size for N and the n-gram content (--length, --pitch, --both)")
     else:
-        for f in listdir(sys.argv[1]):
-            filepath = join(sys.argv[1], f)
-            if isfile(filepath):
-                print("Generating file", f)
-                generate_ngram(filepath).to_csv(join(sys.argv[2], f))
+        file = sys.argv[1]
+        if isfile(file):
+        	unigram = pd.read_csv(file, index_col=0)
+        	print(generate_ngram(unigram, int(sys.argv[2]), sys.argv[3]))
+
+
+
+
+
