@@ -27,9 +27,11 @@ def generate_ngram(df, n, content='--both'):
 			ngram[i] = pitch
 	return ngram
 
+## This file will take a unigram, a size for N and a type
+## (length, pitch, both) and transform this into an n-gram
 if __name__ == "__main__":
     if len(sys.argv) < 4:
-        print("Please provide a unigram source file, a size for N and the n-gram content (--length, --pitch, --both)")
+        print("Please provide arguments: [1] unigram source file, [2] size for N [3] the n-gram content (--length, --pitch, --both)")
     else:
         file = sys.argv[1]
         if isfile(file):

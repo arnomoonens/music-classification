@@ -22,9 +22,12 @@ def test_classifier(classifier, test_data_file):
         output_df=output_df.append(classifier(song), ignore_index=True)
     return output_df
 
+## This code will predict the Performer, Instrument, Style, Year and Tempo
+## based on the probability of their occurence. This is a temporary mockup
+## while we work on the classification using N-grams.
 if __name__ == '__main__':
     if len(sys.argv) < 4:
-        print('Please provide a training input csv file, test input csv file and output file.')
+        print('Please provide parameters: [1] training input csv file, [2] test input csv file, [3] output file.')
     else:
         training_data_file = sys.argv[1]
         test_data_file = sys.argv[2]

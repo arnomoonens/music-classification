@@ -45,9 +45,11 @@ def generate_unigram(path):
     df = df.round(1)
     return df.reset_index(drop=True)
 
+## This file will generate unigrams from the song-csv files and store
+## them in corresponding csv files
 if __name__ == "__main__":
     if len(sys.argv) < 3:
-        print("Please provide a source and output folder.")
+        print("Please provide arguments: [1] source folder, [2] output folder.")
     else:
         for f in listdir(sys.argv[1]):
             filepath = join(sys.argv[1], f)

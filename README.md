@@ -3,3 +3,6 @@ Classification of MIDI music as a project for the course [Current Trends in Arti
 
 ## Representation
 As a representation, we will use n-grams. More information about this representation and why we will use it can be found [here](https://github.com/arnomoonens/music-classification/blob/master/SwingingPenguins-Phase1.pdf).
+
+## Running our code
+You can run our code by executing the provided Perl script (`crossvalidate.pl`), providing the repo folder as argument. So basically: `./crossvalidate.pl ./music-classification`.
