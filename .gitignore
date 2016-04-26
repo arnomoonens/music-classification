@@ -10,3 +10,6 @@ training-data-file-*.csv
 
 # added by GitSavvy
 output-file-*.csv
+
+# added by GitSavvy
+__pycache__/

@@ -2,13 +2,12 @@
 
 import sys
 import pandas as pd
-import itertools
 import numpy as np
 from os import listdir
 from os.path import isfile, join
 
 def round_down(num, divisor):
-	return num - (num%divisor)
+    return num - (num % divisor)
 
 def generate_unigram(path):
     rows_to_skip = 0
@@ -23,12 +22,12 @@ def generate_unigram(path):
     df = pd.read_csv(path,
                          skiprows=rows_to_skip,
                          error_bad_lines=False,
-                         #skipfooter=2,
-                         #engine='python',
+                         # skipfooter=2,
+                         # engine='python',
                          header=None,
-                         usecols=[1,4],
+                         usecols=[1, 4],
                          names=["time", "pitch"])
-    N = len(df.index)-2 #Don't use the last 2 lines, as discussed above
+    N = len(df.index) - 2  # Don't use the last 2 lines, as discussed above
 
     # First caculate the note length
     # To calculate the note length: subtract time of uneven rows by time of even rows
@@ -38,15 +37,15 @@ def generate_unigram(path):
                           })
 
     df['pitch'] = round_down(df.shift(-1)['pitch'] - df['pitch'], 0.2)
-    df.set_value(N-1, 'pitch', 0)
+    df.set_value(N - 1, 'pitch', 0)
 
-    df['note length'] = round_down(np.log2(df.shift(-1)['note length']/df['note length']), 0.2)
-    df.set_value(N-1, 'note length', 0)
+    df['note length'] = round_down(np.log2(df.shift(-1)['note length'] / df['note length']), 0.2)
+    df.set_value(N - 1, 'note length', 0)
     df = df.round(1)
     return df.reset_index(drop=True)
 
-## This file will generate unigrams from the song-csv files and store
-## them in corresponding csv files
+# This file will generate unigrams from the song-csv files and store
+# them in corresponding csv files
 if __name__ == "__main__":
     if len(sys.argv) < 3:
         print("Please provide arguments: [1] source folder, [2] output folder.")
@@ -56,11 +55,3 @@ if __name__ == "__main__":
             if isfile(filepath):
                 print("Generating file", f)
                 generate_unigram(filepath).to_csv(join(sys.argv[2], f))
-
-
-
-
-
-
-
-
