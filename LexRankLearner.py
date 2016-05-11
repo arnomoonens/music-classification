@@ -58,14 +58,10 @@ class LexRankLearner(Learner):
         p = [1.0 / n] * n
         while True:
             new_p = [0] * n
-            for i in range(n):
-                for j in range(n):
-                    new_p[i] += M[j][i] * p[j]
-            total = 0
-            for x in range(n):
-                total += (new_p[i] - p[i])**2
+            new_p = np.dot(np.transpose(M), p)
+            delta = np.linalg.norm(new_p - p)
             p = new_p
-            if total < epsilon:
+            if delta < epsilon:
                 break
         return p
 
