@@ -2,7 +2,8 @@
 import sys
 import logging
 # from RandomLearner import RandomLearner
-# from profiles import ProfileLearner
+# from ProfileLearner import ProfileLearner
+# from LexRankLearner import LexRankLearner
 from LDALearner import LDALearner
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -17,7 +18,9 @@ if __name__ == '__main__':
         training_data_file = sys.argv[1]
         test_data_file = sys.argv[2]
         output_file = sys.argv[3]
-        learner = LDALearner(3, '--both', column_names=column_names, output_names=output_columns)
+        learner = LDALearner(3, '--both',
+                             column_names=column_names,
+                             output_names=output_columns)
         learner.learn(training_data_file)
         logging.info('Classifier made, now testing it.')
         results = learner.test(test_data_file)

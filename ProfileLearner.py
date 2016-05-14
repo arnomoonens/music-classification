@@ -21,14 +21,16 @@ class ProfileLearner(Learner):
             c[tuple([float(nr) for nr in x])] += 1
         return c
 
-    # Calculate the similarity between the profile of specific output_columns value (e.g. specific composer) and the profile of a song
+    # Calculate the similarity between the profile of specific
+    # output_columns value (e.g. specific composer) and the profile of a song
     def __similarity(self, type_profile, song_profile):
         new_type_profile = dict()
         new_song_profile = dict()
         for k in list(type_profile.keys()) + list(set(song_profile.keys()) - set(type_profile.keys())):
             new_type_profile[k] = type_profile[k] if k in type_profile else 0
             new_song_profile[k] = song_profile[k] if k in song_profile else 0
-        return sum([4 - ((2 * (new_type_profile[k] - new_song_profile[k])) / (new_type_profile[k] + new_song_profile[k])) ** 2 for k in new_type_profile.keys()])  # Similarity formula from original paper
+        # Similarity formula from original paper
+        return sum([4 - ((2 * (new_type_profile[k] - new_song_profile[k])) / (new_type_profile[k] + new_song_profile[k])) ** 2 for k in new_type_profile.keys()])
 
     # Make a classifier based on ngram profiles
     def learn(self, input_data_file):
@@ -42,9 +44,8 @@ class ProfileLearner(Learner):
             grouped = df.groupby(output_column)  # …group the rows by that output type…
             for name, group in grouped:
                 profile = group.loc[:, 'profile'].sum()  # …and build a profile for each instance of a type (e.g. profile of a specific performer) by summing the profiles of the songs with that specific output type
-                flat_profile = list(profile.items())
-                flat_profile = flat_profile[:self.profile_size]  # limit profile to profile_size
-                profile = Counter(dict(flat_profile))
+                if self.profile_size > 0:
+                    profile = profile.most_common(self.profile_size)
                 type_profiles = type_profiles.append({'type': output_column, 'name': name, 'profile': profile}, ignore_index=True)
         logging.info('Profiles for types made')
         self.types_grouped = type_profiles.groupby('type')  # Group of all performers, group of all years,…

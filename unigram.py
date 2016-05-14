@@ -20,21 +20,19 @@ def generate_unigram(path):
     # (skipfooter) can't be used with the C engine, while error_bad_lines can't be used
     # with the python engine. As such, we skip the last 2 lines manually by reducing N.
     df = pd.read_csv(path,
-                         skiprows=rows_to_skip,
-                         error_bad_lines=False,
-                         # skipfooter=2,
-                         # engine='python',
-                         header=None,
-                         usecols=[1, 4],
-                         names=["time", "pitch"])
+                     skiprows=rows_to_skip,
+                     error_bad_lines=False,
+                     # skipfooter=2,
+                     # engine='python',
+                     header=None,
+                     usecols=[1, 4],
+                     names=["time", "pitch"])
     N = len(df.index) - 2  # Don't use the last 2 lines, as discussed above
 
     # First caculate the note length
     # To calculate the note length: subtract time of uneven rows by time of even rows
-    df = pd.DataFrame({
-                          'note length': df[1:N:2]['time'].values - df[:N:2]['time'].values,
-                          'pitch': df[1:N:2]['pitch']
-                          })
+    df = pd.DataFrame({'note length': df[1:N:2]['time'].values - df[:N:2]['time'].values,
+                       'pitch': df[1:N:2]['pitch']})
 
     df['pitch'] = round_down(df.shift(-1)['pitch'] - df['pitch'], 0.2)
     df.set_value(N - 1, 'pitch', 0)
