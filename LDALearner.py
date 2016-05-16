@@ -33,7 +33,7 @@ class LDALearner(Learner):
         training_input = self.v.fit_transform(doc_topics)  # "unsparse" the {topic_id: probability} dictionary
         logging.info('Learning classifiers')
         for output_name in self.output_names:
-            if output_name == 'Tempo':
+            if output_name in ['Tempo', 'Year']:
                 self.classifiers[output_name] = svm.SVR()
             else:
                 self.classifiers[output_name] = svm.SVC(decision_function_shape='ovo')

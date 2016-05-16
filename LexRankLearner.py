@@ -42,17 +42,17 @@ class LexRankLearner(Learner):
             for j in range(n):
                 sim = self.__cosine_distance(flat_doc[i][0], flat_doc[j][0])
                 if sim > t:
-                    cosine_matrix[i,j] = 1
+                    cosine_matrix[i, j] = 1
                     degree[i] += 1
         for i in range(n):
             for j in range(n):
                 if degree[i] == 0:
-                    degree[i] = 1 #At least similar to itself
-                cosine_matrix[i,j] = cosine_matrix[i,j] / degree[i]
+                    degree[i] = 1  # At least similar to itself
+                cosine_matrix[i, j] = cosine_matrix[i, j] / degree[i]
         return self.__power_method(cosine_matrix, n, 0.15)
 
     def __cosine_distance(self, sen1, sen2):
-        return np.dot(sen1, sen2)  / (math.sqrt(np.dot(sen1, sen1) * np.dot(sen2, sen2)))
+        return np.dot(sen1, sen2) / (math.sqrt(np.dot(sen1, sen1) * np.dot(sen2, sen2)))
 
     def __power_method(self, M, n, epsilon):
         p = [1.0 / n] * n
@@ -88,8 +88,9 @@ class LexRankLearner(Learner):
             flat_profile = list(row['profile'].keys())
             # I was hoping to do this using a one-liner with np.where, but it doesn't work
             reduced_profile = []
-            for i,x in enumerate(mask):
-                if x: reduced_profile.append(flat_profile[i])
+            for i, x in enumerate(mask):
+                if x:
+                    reduced_profile.append(flat_profile[i])
             row['profile'] = Counter(reduced_profile)
         logging.info('LexRank applied to profiles')
         self.types_grouped = type_profiles.groupby('type')  # Group of all performers, group of all years,…
