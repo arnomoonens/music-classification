@@ -42,13 +42,14 @@ class LDALearner(Learner):
         return
 
     def classify(self, song_df):
+        """Classify a specific song"""
         ngram = [str(x) for x in generate_ngram(song_df, self.N, self.ngram_type)]
         bow = self.dictionary.doc2bow(ngram)
         topics = self.ldamodel.get_document_topics(bow)
         return {output_name: clf.predict([self.v.transform(topics)])[0] for output_name, clf in self.classifiers.items()}
 
-    # Use a special test function for better performance
     def test(self, test_data_file):
+        """Classify all songs in a test set"""
         df = pd.read_csv(test_data_file, sep=';', index_col=0, names=self.column_names)
         songs = [[str(x) for x in generate_ngram(pd.read_csv("unigram/" + str(i) + ".csv", index_col=0), self.N, self.ngram_type)] for i in df.index]
         corpus = [self.dictionary.doc2bow(song) for song in songs]
