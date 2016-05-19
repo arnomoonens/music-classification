@@ -93,7 +93,7 @@ class LDALearner(Learner):
         corpus = [self.__dictionary.doc2bow(song) for song in songs]
         doc_topics = [dict(self.__ldamodel.get_document_topics(corpus_song)) for corpus_song in corpus]
         test_input = np.float32(self.__v.transform(doc_topics))
-        output_arrays = [learner['label encoder'].inverse_transform(learner['learner'].predict(test_input)) if learner['type'] == 'classifier' else learner['learner'].predict(test_input) for learner in self.__learners]
+        output_arrays = [learner['label encoder'].inverse_transform(learner['learner'].predict(test_input)) if learner['type'] == 'classifier' else learner['learner'].predict(test_input).flatten() for learner in self.__learners]
         dicts = [dict(zip(self.output_names, row)) for row in zip(*output_arrays)]
         output_df = pd.DataFrame(columns=self.output_names)
         output_df = output_df.append(dicts, ignore_index=True)
