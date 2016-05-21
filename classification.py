@@ -16,17 +16,19 @@ output_names = ['Performer', 'Inst.', 'Style', 'Year', 'Tempo']
 if __name__ == '__main__':
     if len(sys.argv) < 4:
         print("""
-              Please provide parameters: [1] training input csv file,
-                                         [2] test input csv file,
-                                         [3] output file.
+              Please provide parameters:
+              [1] training input csv file,
+              [2] test input csv file,
+              [3] output file.
               """)
     else:
         training_data_file = sys.argv[1]
         test_data_file = sys.argv[2]
         output_file = sys.argv[3]
         learner = ProfileLearner(3,
-                                 -1,
-                                 similarity='-m',
+                                 1000,
+                                 ngram_type='--both',
+                                 similarity='-d',
                                  column_names=column_names,
                                  output_names=output_names)
         learner.learn(training_data_file)

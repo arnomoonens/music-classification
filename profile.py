@@ -57,4 +57,4 @@ def dice(type_profile, song_profile):
     type_profile_len = len(type_profile)
     song_profile_len = len(song_profile)
     overlap = set(flat_type_profile).intersection(set(flat_song_profile))
-    return 2 * overlap / (type_profile_len + song_profile_len)  # Maximization!
+    return 2 * len(overlap) / (type_profile_len + song_profile_len)  # Maximization!
