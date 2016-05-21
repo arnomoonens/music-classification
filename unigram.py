@@ -6,8 +6,10 @@ import numpy as np
 from os import listdir
 from os.path import isfile, join
 
+
 def round_down(num, divisor):
     return num - (num % divisor)
+
 
 def generate_unigram(path):
     rows_to_skip = 0

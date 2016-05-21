@@ -9,9 +9,8 @@ from sklearn import svm
 
 logging.getLogger("gensim").setLevel(logging.WARNING)
 
-class LDALearner(Learner):
-    """docstring for LDALearner"""
 
+class LDALearner(Learner):
     classifiers = {}
 
     def __init__(self, N, ngram_type, **kwargs):
@@ -20,7 +19,10 @@ class LDALearner(Learner):
         self.ngram_type = ngram_type
 
     def learn(self, input_data_file):
-        df = pd.read_csv(input_data_file, sep=';', index_col=0, names=self.column_names)
+        df = pd.read_csv(input_data_file,
+                         sep=';',
+                         index_col=0,
+                         names=self.column_names)
         logging.info('Making ngrams')
         songs = [[str(x) for x in generate_ngram(pd.read_csv("unigram/" + str(i) + ".csv", index_col=0), self.N, self.ngram_type)] for i in df.index]
         logging.info('Made ngrams, now generating LDA model')

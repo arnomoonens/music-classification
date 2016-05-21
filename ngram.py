@@ -4,26 +4,19 @@ import sys
 import pandas as pd
 import numpy as np
 from os.path import isfile
+from nltk.util import ngrams
+
 
 def generate_ngram(df, n, content='--both'):
+    nlength = list(ngrams(df.loc[:, 'note length'], n))
+    pitch = list(ngrams(df.loc[:, 'pitch'], n))
     if content == '--both':
-        ngram = np.zeros((len(df) - n + 1, n * 2))
-        for i in range(len(df) - n + 1):
-            nlength = np.array(df['note length'].iloc[i:i + n])
-            pitch = np.array(df['pitch'].iloc[i:i + n])
-            gram = np.append(nlength, pitch)
-            ngram[i] = gram
+        return [tuple(np.array(x).flatten()) for x in list(zip(nlength, pitch))]
     elif content == '--length':
-        ngram = np.zeros((len(df) - n + 1, n))
-        for i in range(len(df) - n + 1):
-            nlength = np.array(df['note length'].iloc[i:i + n])
-            ngram[i] = nlength
-    elif content == "--pitch":
-        ngram = np.zeros((len(df) - n + 1, n))
-        for i in range(len(df) - n + 1):
-            pitch = np.array(df['pitch'].iloc[i:i + n])
-            ngram[i] = pitch
-    return ngram
+        return nlength
+    elif content == '--pitch':
+        return pitch
+
 
 # This file will take a unigram, a size for N and a type
 # (length, pitch, both) and transform this into an n-gram

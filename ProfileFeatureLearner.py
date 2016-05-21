@@ -7,6 +7,7 @@ import logging
 from Learner import Learner
 from profile import get_profile
 
+
 class ProfileFeatureLearner(Learner):
     """Naive bayes and linear regression learner using n-gram counts as features"""
 

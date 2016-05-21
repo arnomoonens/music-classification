@@ -6,6 +6,7 @@ import math
 from profile import get_profile, similarity
 import logging
 
+
 class LexRankLearner(Learner):
     """Classify using profiles
     Profiles are reduced using LexRank algorithm"""

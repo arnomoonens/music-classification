@@ -4,6 +4,7 @@ import random
 import itertools
 import pandas as pd
 
+
 class RandomLearner(Learner):
     """Classify random using a probability"""
 
