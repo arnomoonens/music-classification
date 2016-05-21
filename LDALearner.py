@@ -6,7 +6,7 @@ import numpy as np
 import logging
 from sklearn.feature_extraction import DictVectorizer
 from sklearn.preprocessing import LabelEncoder
-from sklearn import svm
+# from sklearn import svm
 
 import lasagne
 from lasagne import layers
@@ -52,7 +52,10 @@ class LDALearner(Learner):
         )
 
     def learn(self, input_data_file):
-        df = pd.read_csv(input_data_file, sep=';', index_col=0, names=self.column_names)
+        df = pd.read_csv(input_data_file,
+                         sep=';',
+                         index_col=0,
+                         names=self.column_names)
         logging.info('Making ngrams')
         songs = [[str(x) for x in generate_ngram(pd.read_csv("unigram/" + str(i) + ".csv", index_col=0), self.N, self.ngram_type)] for i in df.index]
         logging.info('Made ngrams, now generating LDA model')
@@ -80,14 +83,15 @@ class LDALearner(Learner):
         return
 
     def classify(self, song_df):
+        """Classify a specific song"""
         ngram = [str(x) for x in generate_ngram(song_df, self.N, self.ngram_type)]
         bow = self.__dictionary.doc2bow(ngram)
         topics = self.__ldamodel.get_document_topics(bow)
         test_input = np.float32([self.__v.transform(topics)])
         return {learner['output name']: learner['label encoder'].inverse_transform(learner['learner'].predict(test_input)) if learner['type'] == 'classifier' else learner['learner'].predict(test_input) for learner in self.__learners}
 
-    # Use a special test function for better performance
     def test(self, test_data_file):
+        """Classify all songs in a test set"""
         df = pd.read_csv(test_data_file, sep=';', index_col=0, names=self.column_names)
         songs = [[str(x) for x in generate_ngram(pd.read_csv("unigram/" + str(i) + ".csv", index_col=0), self.N, self.ngram_type)] for i in df.index]
         corpus = [self.__dictionary.doc2bow(song) for song in songs]

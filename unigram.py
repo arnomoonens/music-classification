@@ -6,8 +6,10 @@ import numpy as np
 from os import listdir
 from os.path import isfile, join
 
+
 def round_down(num, divisor):
     return num - (num % divisor)
+
 
 def generate_unigram(path):
     rows_to_skip = 0
@@ -46,7 +48,11 @@ def generate_unigram(path):
 # them in corresponding csv files
 if __name__ == "__main__":
     if len(sys.argv) < 3:
-        print("Please provide arguments: [1] source folder, [2] output folder.")
+        print("""
+              Please provide arguments:
+              [1] source folder,
+              [2] output folder.
+              """)
     else:
         for f in listdir(sys.argv[1]):
             filepath = join(sys.argv[1], f)
