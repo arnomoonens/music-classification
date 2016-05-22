@@ -3,7 +3,7 @@ from sklearn.feature_extraction import DictVectorizer
 import logging
 
 from Learner import Learner
-from profile import get_profile
+from profile import get_profile, get_union_profile
 
 # Classifiers and regressors
 from sklearn.naive_bayes import GaussianNB
@@ -44,7 +44,7 @@ class ProfileFeatureLearner(Learner):
         """Train learners using profiles of songs"""
         df = pd.read_csv(input_data_file, sep=';', index_col=0, names=self.column_names)
         logging.info('Making profiles for songs')
-        df['profile'] = df.apply(lambda row: get_profile(pd.read_csv("unigram/" + str(row.name) + ".csv", index_col=0), self.N, self.ngram_type), axis=1)  # Make profile for each song in input
+        df['profile'] = df.apply(lambda row: get_union_profile(pd.read_csv("unigram/" + str(row.name) + ".csv", index_col=0), self.N, self.ngram_type), axis=1)  # Make profile for each song in input
         self.v = DictVectorizer(sparse=False)
         self.v.fit(df['profile'])
         training_input = self.v.transform(df['profile'])
@@ -65,7 +65,7 @@ class ProfileFeatureLearner(Learner):
     def test(self, test_data_file):
         """Classify all songs in a test set"""
         df = pd.read_csv(test_data_file, sep=';', index_col=0, names=self.column_names)
-        df['profile'] = df.apply(lambda row: get_profile(pd.read_csv("unigram/" + str(row.name) + ".csv", index_col=0), self.N, self.ngram_type), axis=1)
+        df['profile'] = df.apply(lambda row: get_union_profile(pd.read_csv("unigram/" + str(row.name) + ".csv", index_col=0), self.N, self.ngram_type), axis=1)
         test_input = self.v.transform(df['profile'])
         output_arrays = [self.learners[output_name].predict(test_input) for output_name in self.output_names]
         dicts = [dict(zip(self.output_names, row)) for row in zip(*output_arrays)]

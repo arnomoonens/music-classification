@@ -8,6 +8,15 @@ def get_profile(song_df, N, ngram_type):
     return FreqDist(ngram)
 
 
+def get_union_profile(song_df, N, ngram_type):
+    c = Counter()
+    for n in range(N):
+        ngrams = generate_ngram(song_df, n+1, ngram_type)
+        for x in ngrams:
+            c[tuple([float(nr) for nr in x])] += 1
+    return c
+
+
 def similarity(type_profile, song_profile):
     """
     Calculate the similarity between the profile of specific
