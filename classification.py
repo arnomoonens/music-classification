@@ -4,8 +4,8 @@ import logging
 # from RandomLearner import RandomLearner
 # from ProfileLearner import ProfileLearner
 # from LexRankLearner import LexRankLearner
-# from LDALearner import LDALearner
-from ProfileFeatureLearner import ProfileFeatureLearner
+from LDALearner import LDALearner
+# from ProfileFeatureLearner import ProfileFeatureLearner
 
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(levelname)s - %(message)s')
@@ -27,13 +27,20 @@ if __name__ == '__main__':
         output_file = sys.argv[3]
         # learner = LexRankLearner(2, -1, '--both', column_names=column_names, output_names=output_columns)
         # learner = ProfileLearner(1, -1, '--both', similarity=None, column_names=column_names, output_names=output_columns)
-        learner = ProfileFeatureLearner(
-            1,
+        learner = LDALearner(
+            3,
             '--both',
             classifier='random forest', classifier_args={'n_jobs': -1, 'n_estimators': 60, 'warm_start': True},
             regressor='random forest', regressor_args={'n_jobs': -1, 'n_estimators': 20, 'warm_start': True},
             column_names=column_names,
             output_names=output_names)
+        # learner = ProfileFeatureLearner(
+        #     1,
+        #     '--both',
+        #     classifier='random forest', classifier_args={'n_jobs': -1, 'n_estimators': 60, 'warm_start': True},
+        #     regressor='random forest', regressor_args={'n_jobs': -1, 'n_estimators': 20, 'warm_start': True},
+        #     column_names=column_names,
+        #     output_names=output_names)
         learner.learn(training_data_file)
         logging.info('Classifier made, now testing it.')
         results = learner.test(test_data_file)

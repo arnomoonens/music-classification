@@ -5,6 +5,8 @@ import pandas as pd
 import numpy as np
 import logging
 from sklearn.feature_extraction import DictVectorizer
+from sklearn.preprocessing import LabelEncoder
+# from sklearn import svm
 
 # Classifiers and regressors
 from sklearn.naive_bayes import GaussianNB
@@ -12,12 +14,20 @@ from sklearn.linear_model import LinearRegression
 from sklearn import svm
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.ensemble import RandomForestRegressor
+import lasagne
+from lasagne import layers
+from lasagne.updates import nesterov_momentum
+from nolearn.lasagne import NeuralNet
+from nolearn.lasagne.base import TrainSplit
 
 logging.getLogger("gensim").setLevel(logging.WARNING)
 
-
 class LDALearner(Learner):
-    learners = {}
+    """Learner that uses Latent Dirichlet Allocation"""
+
+    __learners = []
+    __dictionary = None
+    __v = None
 
     def get_classifier(self, name, algorithm_args):
         """Return a function to make a classifier of a certain type"""
@@ -44,6 +54,29 @@ class LDALearner(Learner):
         self.classifier = self.get_classifier(classifier, classifier_args)
         self.regressor = self.get_regressor(regressor, regressor_args)
 
+    def __make_neural_net(self, nr_topics, regression, nr_outputs):
+        return NeuralNet(
+            layers=[('input', layers.InputLayer),
+                    ('hidden', layers.DenseLayer),
+                    ('output', layers.DenseLayer),
+                    ],
+            # layer parameters:
+            input_shape=(None, nr_topics),
+            hidden_num_units=20,  # number of units in 'hidden' layer
+            output_nonlinearity=None if regression else lasagne.nonlinearities.softmax,
+            output_num_units=nr_outputs,
+
+            # optimization method:
+            update=nesterov_momentum,
+            update_learning_rate=0.001,
+            update_momentum=0.9,
+            regression=regression,
+            train_split=TrainSplit(eval_size=0.2),
+
+            max_epochs=1000,
+            verbose=0,
+        )
+
     def learn(self, input_data_file):
         df = pd.read_csv(input_data_file,
                          sep=';',
@@ -52,38 +85,45 @@ class LDALearner(Learner):
         logging.info('Making ngrams')
         songs = [[str(x) for x in generate_ngram(pd.read_csv("unigram/" + str(i) + ".csv", index_col=0), self.N, self.ngram_type)] for i in df.index]
         logging.info('Made ngrams, now generating LDA model')
-        self.dictionary = corpora.Dictionary(songs)
-        corpus = [self.dictionary.doc2bow(song) for song in songs]
-        self.ldamodel = models.ldamodel.LdaModel(corpus, num_topics=50, id2word=self.dictionary, passes=20)
+        self.__dictionary = corpora.Dictionary(songs)
+        corpus = [self.__dictionary.doc2bow(song) for song in songs]
+        self.__ldamodel = models.ldamodel.LdaModel(corpus, num_topics=50, id2word=self.__dictionary, passes=20)
         logging.info('LDA model generated')
-        doc_topics = [dict(self.ldamodel.get_document_topics(corpus_song)) for corpus_song in corpus]  # probability of topics for each song
-        self.v = DictVectorizer(sparse=False)
-        training_input = self.v.fit_transform(doc_topics)  # "unsparse" the {topic_id: probability} dictionary
-        logging.info('Learning learners')
+        doc_topics = [dict(self.__ldamodel.get_document_topics(corpus_song)) for corpus_song in corpus]  # probability of topics for each song
+        self.__v = DictVectorizer(sparse=False)
+        training_input = self.__v.fit_transform(doc_topics)  # "unsparse" the {topic_id: probability} dictionary
+        logging.info('Learning classifiers')
         for output_name in self.output_names:
+            training_output = np.array(df[output_name])
             if output_name in ['Tempo', 'Year']:
-                self.learners[output_name] = self.regressor()
+                regressor = self.__make_neural_net(training_input.shape[1], True, 1)  # regression=True, 1 output
+                regressor.fit(np.float32(training_input), np.float32(training_output))
+                self.__learners.append({'output name': output_name, 'learner': regressor, 'type': 'regressor'})
             else:
-                self.learners[output_name] = self.classifier()
-            self.learners[output_name].fit(training_input, np.array(df[output_name]))
+                label_encoder = LabelEncoder()
+                labels = label_encoder.fit_transform(training_output)
+                classifier = self.__make_neural_net(training_input.shape[1], False, len(np.unique(training_output)))  # regression=False
+                classifier.fit(np.float32(training_input), np.int32(labels))
+                self.__learners.append({'ouput name': output_name, 'label encoder': label_encoder, 'learner': classifier, 'type': 'classifier'})
         logging.info('learners learned')
         return
 
     def classify(self, song_df):
         """Classify a specific song"""
         ngram = [str(x) for x in generate_ngram(song_df, self.N, self.ngram_type)]
-        bow = self.dictionary.doc2bow(ngram)
-        topics = self.ldamodel.get_document_topics(bow)
-        return {output_name: clf.predict([self.v.transform(topics)])[0] for output_name, clf in self.learners.items()}
+        bow = self.__dictionary.doc2bow(ngram)
+        topics = self.__ldamodel.get_document_topics(bow)
+        test_input = np.float32([self.__v.transform(topics)])
+        return {learner['output name']: learner['label encoder'].inverse_transform(learner['learner'].predict(test_input)) if learner['type'] == 'classifier' else learner['learner'].predict(test_input) for learner in self.__learners}
 
     def test(self, test_data_file):
         """Classify all songs in a test set"""
         df = pd.read_csv(test_data_file, sep=';', index_col=0, names=self.column_names)
         songs = [[str(x) for x in generate_ngram(pd.read_csv("unigram/" + str(i) + ".csv", index_col=0), self.N, self.ngram_type)] for i in df.index]
-        corpus = [self.dictionary.doc2bow(song) for song in songs]
-        doc_topics = [dict(self.ldamodel.get_document_topics(corpus_song)) for corpus_song in corpus]
-        test_input = self.v.transform(doc_topics)
-        output_arrays = [self.learners[output_name].predict(test_input) for output_name in self.output_names]
+        corpus = [self.__dictionary.doc2bow(song) for song in songs]
+        doc_topics = [dict(self.__ldamodel.get_document_topics(corpus_song)) for corpus_song in corpus]
+        test_input = np.float32(self.__v.transform(doc_topics))
+        output_arrays = [learner['label encoder'].inverse_transform(learner['learner'].predict(test_input)) if learner['type'] == 'classifier' else learner['learner'].predict(test_input).flatten() for learner in self.__learners]
         dicts = [dict(zip(self.output_names, row)) for row in zip(*output_arrays)]
         output_df = pd.DataFrame(columns=self.output_names)
         output_df = output_df.append(dicts, ignore_index=True)
