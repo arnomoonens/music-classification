@@ -1,14 +1,11 @@
-from collections import Counter
 from ngram import generate_ngram
+from nltk import FreqDist
 
 
 def get_profile(song_df, N, ngram_type):
     """Generate a profile using song data"""
     ngram = generate_ngram(song_df, N, ngram_type)
-    c = Counter()
-    for x in ngram:
-        c[tuple([float(nr) for nr in x])] += 1
-    return c
+    return FreqDist(ngram)
 
 
 def similarity(type_profile, song_profile):

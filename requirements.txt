@@ -2,3 +2,6 @@ gensim >= 0.12.4
 pandas >= 0.17.1
 numpy >= 1.11.0
 scikit_learn >= 0.17.1
+Theano==0.8.2
+Lasagne==0.1
+nolearn==0.6a0.dev0

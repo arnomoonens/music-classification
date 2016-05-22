@@ -2,9 +2,9 @@
 import sys
 import logging
 # from RandomLearner import RandomLearner
-from ProfileLearner import ProfileLearner
+# from ProfileLearner import ProfileLearner
 # from LexRankLearner import LexRankLearner
-# from ProfileFeatureLearner import ProfileFeatureLearner
+from ProfileFeatureLearner import ProfileFeatureLearner
 
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(levelname)s - %(message)s')
@@ -25,12 +25,11 @@ if __name__ == '__main__':
         training_data_file = sys.argv[1]
         test_data_file = sys.argv[2]
         output_file = sys.argv[3]
-        learner = ProfileLearner(3,
-                                 1000,
-                                 ngram_type='--both',
-                                 similarity='-d',
-                                 column_names=column_names,
-                                 output_names=output_names)
+        learner = ProfileFeatureLearner(
+            3,
+            ngram_type='--both',
+            column_names=column_names,
+            output_names=output_names)
         learner.learn(training_data_file)
         logging.info('Classifier made, now testing it.')
         results = learner.test(test_data_file)
