@@ -31,9 +31,9 @@ class ProfileFeatureLearner(Learner):
     def get_classifier(self, name, algorithm_args):
         """Return a function to make a classifier of a certain type"""
         possible_classifiers = {
-            'svm': lambda: svm.SVC(decision_function_shape='ovo', **algorithm_args),
-            'naive_bayes': lambda: GaussianNB(**algorithm_args),
-            'random forest': lambda: RandomForestClassifier(**algorithm_args)
+            'svm': lambda: svm.SVC(**{'decision_function_shape': 'ovo', **algorithm_args}),
+            'naive bayes': lambda: GaussianNB(**algorithm_args),
+            'random forest': lambda: RandomForestClassifier(**{'n_jobs': -1, 'warm_start': True, **algorithm_args})
         }
         return possible_classifiers[name]
 
@@ -41,8 +41,8 @@ class ProfileFeatureLearner(Learner):
         """Return a function to make a regressor of a certain type"""
         possible_regressors = {
             'svm': lambda: svm.SVR(**algorithm_args),
-            'linear_regression': lambda: LinearRegression(**algorithm_args),
-            'random forest': lambda: RandomForestRegressor(**algorithm_args)
+            'linear regression': lambda: LinearRegression(**algorithm_args),
+            'random forest': lambda: RandomForestRegressor(**{'n_jobs': -1, 'warm_start': True, **algorithm_args})
         }
         return possible_regressors[name]
 
@@ -81,7 +81,7 @@ class ProfileFeatureLearner(Learner):
         """Train learners using profiles of songs"""
         df = pd.read_csv(input_data_file, sep=';', index_col=0, names=self.column_names)
         logging.info('Making profiles for songs')
-        df['profile'] = df.apply(lambda row: get_union_profile(pd.read_csv("unigram/" + str(row.name) + ".csv", index_col=0), self.N, self.ngram_type), axis=1)  # Make profile for each song in input
+        df['profile'] = df.apply(lambda row: get_profile(pd.read_csv("unigram/" + str(row.name) + ".csv", index_col=0), self.N, self.ngram_type), axis=1)  # Make profile for each song in input
         self.v = DictVectorizer(sparse=False)
         self.v.fit(df['profile'])
         training_input = self.v.transform(df['profile'])
@@ -105,13 +105,13 @@ class ProfileFeatureLearner(Learner):
 
     def classify(self, song_df):
         """Classify a specific song"""
-        test_input = np.float32(self.v.transform(get_union_profile(song_df, self.N, self.ngram_type)))
+        test_input = np.float32(self.v.transform(get_profile(song_df, self.N, self.ngram_type)))
         return {learner['output name']: learner['label encoder'].inverse_transform(learner['learner'].predict(test_input)) if learner['type'] == 'classifier' else learner['learner'].predict(test_input) for learner in self.__learners}
 
     def test(self, test_data_file):
         """Classify all songs in a test set"""
         df = pd.read_csv(test_data_file, sep=';', index_col=0, names=self.column_names)
-        df['profile'] = df.apply(lambda row: get_union_profile(pd.read_csv("unigram/" + str(row.name) + ".csv", index_col=0), self.N, self.ngram_type), axis=1)
+        df['profile'] = df.apply(lambda row: get_profile(pd.read_csv("unigram/" + str(row.name) + ".csv", index_col=0), self.N, self.ngram_type), axis=1)
         test_input = np.float32(self.v.transform(df['profile']))
         output_arrays = [learner['label encoder'].inverse_transform(learner['learner'].predict(test_input)) if learner['type'] == 'classifier' else learner['learner'].predict(test_input).flatten() for learner in self.__learners]
         dicts = [dict(zip(self.output_names, row)) for row in zip(*output_arrays)]

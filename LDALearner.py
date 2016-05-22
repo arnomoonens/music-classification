@@ -32,9 +32,9 @@ class LDALearner(Learner):
     def get_classifier(self, name, algorithm_args):
         """Return a function to make a classifier of a certain type"""
         possible_classifiers = {
-            'svm': lambda: svm.SVC(decision_function_shape='ovo', **algorithm_args),
+            'svm': lambda: svm.SVC(**{'decision_function_shape': 'ovo', **algorithm_args}),
             'naive bayes': lambda: GaussianNB(**algorithm_args),
-            'random forest': lambda: RandomForestClassifier(**algorithm_args)
+            'random forest': lambda: RandomForestClassifier(**{'n_jobs': -1, 'warm_start': True, **algorithm_args})
         }
         return possible_classifiers[name]
 
@@ -42,8 +42,8 @@ class LDALearner(Learner):
         """Return a function to make a regressor of a certain type"""
         possible_regressors = {
             'svm': lambda: svm.SVR(**algorithm_args),
-            'linear_regression': lambda: LinearRegression(**algorithm_args),
-            'random forest': lambda: RandomForestRegressor(**algorithm_args)
+            'linear regression': lambda: LinearRegression(**algorithm_args),
+            'random forest': lambda: RandomForestRegressor(**{'n_jobs': -1, 'warm_start': True, **algorithm_args})
         }
         return possible_regressors[name]
 
@@ -96,13 +96,15 @@ class LDALearner(Learner):
         for output_name in self.output_names:
             training_output = np.array(df[output_name])
             if output_name in ['Tempo', 'Year']:
-                regressor = self.__make_neural_net(training_input.shape[1], True, 1)  # regression=True, 1 output
+                # regressor = self.__make_neural_net(training_input.shape[1], True, 1)  # regression=True, 1 output
+                regressor = self.regressor()
                 regressor.fit(np.float32(training_input), np.float32(training_output))
                 self.__learners.append({'output name': output_name, 'learner': regressor, 'type': 'regressor'})
             else:
                 label_encoder = LabelEncoder()
                 labels = label_encoder.fit_transform(training_output)
-                classifier = self.__make_neural_net(training_input.shape[1], False, len(np.unique(training_output)))  # regression=False
+                # classifier = self.__make_neural_net(training_input.shape[1], False, len(np.unique(training_output)))  # regression=False
+                classifier = self.classifier()
                 classifier.fit(np.float32(training_input), np.int32(labels))
                 self.__learners.append({'ouput name': output_name, 'label encoder': label_encoder, 'learner': classifier, 'type': 'classifier'})
         logging.info('learners learned')
