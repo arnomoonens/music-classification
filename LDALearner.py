@@ -20,6 +20,7 @@ class LDALearner(Learner):
     learners = {}
 
     def get_classifier(self, name, algorithm_args):
+        """Return a function to make a classifier of a certain type"""
         possible_classifiers = {
             'svm': lambda: svm.SVC(decision_function_shape='ovo', **algorithm_args),
             'naive bayes': lambda: GaussianNB(**algorithm_args),
@@ -28,6 +29,7 @@ class LDALearner(Learner):
         return possible_classifiers[name]
 
     def get_regressor(self, name, algorithm_args):
+        """Return a function to make a regressor of a certain type"""
         possible_regressors = {
             'svm': lambda: svm.SVR(**algorithm_args),
             'linear_regression': lambda: LinearRegression(**algorithm_args),

@@ -1,5 +1,6 @@
-from nltk import FreqDist
 from ngram import generate_ngram
+from nltk import FreqDist
+from collections import Counter
 
 
 def get_profile(song_df, N, ngram_type):
@@ -11,7 +12,7 @@ def get_profile(song_df, N, ngram_type):
 def get_union_profile(song_df, N, ngram_type):
     c = Counter()
     for n in range(N):
-        ngrams = generate_ngram(song_df, n+1, ngram_type)
+        ngrams = generate_ngram(song_df, n + 1, ngram_type)
         for x in ngrams:
             c[tuple([float(nr) for nr in x])] += 1
     return c

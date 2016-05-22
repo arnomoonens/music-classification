@@ -12,7 +12,7 @@ logging.basicConfig(level=logging.INFO,
 
 column_names = ['Id', 'Performer', 'Title', 'Inst.',
                 'Style', 'Year', 'Tempo', 'Number of Notes']
-output_columns = ['Performer', 'Inst.', 'Style', 'Year', 'Tempo']
+output_names = ['Performer', 'Inst.', 'Style', 'Year', 'Tempo']
 
 if __name__ == '__main__':
     if len(sys.argv) < 4:
@@ -33,7 +33,7 @@ if __name__ == '__main__':
             classifier='random forest', classifier_args={'n_jobs': -1, 'n_estimators': 60, 'warm_start': True},
             regressor='random forest', regressor_args={'n_jobs': -1, 'n_estimators': 20, 'warm_start': True},
             column_names=column_names,
-            output_names=output_columns)
+            output_names=output_names)
         learner.learn(training_data_file)
         logging.info('Classifier made, now testing it.')
         results = learner.test(test_data_file)
