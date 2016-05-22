@@ -8,8 +8,12 @@ from nltk.util import ngrams
 
 
 def generate_ngram(df, n, content='--both'):
-    nlength = list(ngrams(df.loc[:, 'note length'], n))
-    pitch = list(ngrams(df.loc[:, 'pitch'], n))
+    if n == 1:
+        nlength = df.loc[:, 'note length']
+        pitch = df.loc[:, 'pitch']
+    else:
+        nlength = list(ngrams(df.loc[:, 'note length'], n))
+        pitch = list(ngrams(df.loc[:, 'pitch'], n))
     if content == '--both':
         return [tuple(np.array(x).flatten()) for x in list(zip(nlength, pitch))]
     elif content == '--length':

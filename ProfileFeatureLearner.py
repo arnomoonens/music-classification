@@ -9,8 +9,7 @@ from profile import get_profile
 from sklearn.naive_bayes import GaussianNB
 from sklearn.linear_model import LinearRegression
 from sklearn import svm
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.ensemble import RandomForestRegressor
+from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 
 
 class ProfileFeatureLearner(Learner):
