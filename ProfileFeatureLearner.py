@@ -28,32 +28,7 @@ class ProfileFeatureLearner(Learner):
     __dictionary = None
     __v = None
 
-    def get_classifier(self, name, algorithm_args):
-        """Return a function to make a classifier of a certain type"""
-        possible_classifiers = {
-            'svm': lambda: svm.SVC(**{'decision_function_shape': 'ovo', **algorithm_args}),
-            'naive bayes': lambda: GaussianNB(**algorithm_args),
-            'random forest': lambda: RandomForestClassifier(**{'n_jobs': -1, 'warm_start': True, **algorithm_args})
-        }
-        return possible_classifiers[name]
-
-    def get_regressor(self, name, algorithm_args):
-        """Return a function to make a regressor of a certain type"""
-        possible_regressors = {
-            'svm': lambda: svm.SVR(**algorithm_args),
-            'linear regression': lambda: LinearRegression(**algorithm_args),
-            'random forest': lambda: RandomForestRegressor(**{'n_jobs': -1, 'warm_start': True, **algorithm_args})
-        }
-        return possible_regressors[name]
-
-    def __init__(self, N, ngram_type, classifier='svm', classifier_args={}, regressor='svm', regressor_args={}, **kwargs):
-        super(ProfileFeatureLearner, self).__init__(**kwargs)
-        self.N = N
-        self.ngram_type = ngram_type
-        self.classifier = self.get_classifier(classifier, classifier_args)
-        self.regressor = self.get_regressor(regressor, regressor_args)
-
-    def __make_neural_net(self, nr_topics, regression, nr_outputs):
+    def __make_neural_net(self, nr_topics, regression, nr_outputs, hidden_num_units=100, max_epochs=100):
         """Make a neural network for classification or regression"""
         return NeuralNet(
             layers=[('input', layers.InputLayer),
@@ -62,7 +37,7 @@ class ProfileFeatureLearner(Learner):
                     ],
             # layer parameters:
             input_shape=(None, nr_topics),
-            hidden_num_units=1000,  # number of units in 'hidden' layer
+            hidden_num_units=hidden_num_units,  # number of units in 'hidden' layer
             output_nonlinearity=None if regression else lasagne.nonlinearities.softmax,
             output_num_units=nr_outputs,
 
@@ -73,9 +48,38 @@ class ProfileFeatureLearner(Learner):
             regression=regression,
             train_split=TrainSplit(eval_size=0.2),
 
-            max_epochs=50,
+            max_epochs=max_epochs,
             verbose=0,
         )
+
+    def get_classifier(self, algorithm_name, output_name, nr_inputs, nr_outputs, algorithm_args):
+        """Return a function to make a classifier of a certain type"""
+        possible_classifiers = {
+            'svm': lambda: svm.SVC(**{'decision_function_shape': 'ovo', **algorithm_args}),
+            'naive bayes': lambda: GaussianNB(**algorithm_args),
+            'random forest': lambda: RandomForestClassifier(**{'n_jobs': -1, 'warm_start': True, **algorithm_args}),
+            'neural network': lambda: self.__make_neural_net(nr_inputs, False, nr_outputs, **algorithm_args)
+        }
+        return possible_classifiers[algorithm_name]()
+
+    def get_regressor(self, algorithm_name, output_name, nr_inputs, nr_outputs, algorithm_args):
+        """Return a function to make a regressor of a certain type"""
+        possible_regressors = {
+            'svm': lambda: svm.SVR(**algorithm_args),
+            'linear regression': lambda: LinearRegression(**algorithm_args),
+            'random forest': lambda: RandomForestRegressor(**{'n_jobs': -1, 'warm_start': True, **algorithm_args}),
+            'neural network': lambda: self.__make_neural_net(nr_inputs, True, nr_outputs, **algorithm_args)
+        }
+        return possible_regressors[algorithm_name]()
+
+    def __init__(self, N, ngram_type, classifier='svm', classifier_args={}, regressor='svm', regressor_args={}, **kwargs):
+        super(ProfileFeatureLearner, self).__init__(**kwargs)
+        self.N = N
+        self.ngram_type = ngram_type
+        self.classifier_type = classifier
+        self.classifier_args = classifier_args
+        self.regressor_type = regressor
+        self.regressor_args = regressor_args
 
     def learn(self, input_data_file):
         """Train learners using profiles of songs"""
@@ -89,15 +93,13 @@ class ProfileFeatureLearner(Learner):
         for output_name in self.output_names:
             training_output = np.array(df[output_name])
             if output_name in ['Year', 'Tempo']:
-                # regressor = self.__make_neural_net(training_input.shape[1], True, 1)  # regression=True, 1 output
-                regressor = self.regressor()
+                regressor = self.get_regressor(self.regressor_type, output_name, training_input.shape[1], 1, self.regressor_args)
                 regressor.fit(np.float32(training_input), np.float32(training_output))
                 self.__learners.append({'output name': output_name, 'learner': regressor, 'type': 'regressor'})
             else:
                 label_encoder = LabelEncoder()
                 labels = label_encoder.fit_transform(training_output)
-                # classifier = self.__make_neural_net(training_input.shape[1], False, len(np.unique(training_output)))  # regression=False
-                classifier = self.classifier()
+                classifier = self.get_classifier(self.classifier_type, output_name, training_input.shape[1], len(np.unique(training_output)), self.classifier_args)
                 classifier.fit(np.float32(training_input), np.int32(labels))
                 self.__learners.append({'ouput name': output_name, 'label encoder': label_encoder, 'learner': classifier, 'type': 'classifier'})
         logging.info('Made and fit learners')
