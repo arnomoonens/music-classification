@@ -10,10 +10,11 @@ import logging
 class LexRankLearner(Learner):
     """Classify using profiles
     Profiles are reduced using LexRank algorithm"""
-    def __init__(self, N, profile_size, **kwargs):
+    def __init__(self, N, profile_size, ngram_type, **kwargs):
         super(LexRankLearner, self).__init__(**kwargs)
         self.N = N
         self.profile_size = profile_size
+        self.ngram_type = ngram_type
 
     # Input: Array S of n sentences (i.e. the Document)
     # Input: cosine threshold t
@@ -53,7 +54,7 @@ class LexRankLearner(Learner):
     def learn(self, input_data_file):
         df = pd.read_csv(input_data_file, sep=';', index_col=0, names=self.column_names)
         logging.info('Making profiles for songs')
-        df['profile'] = df.apply(lambda row: get_profile(pd.read_csv("unigram/" + str(row.name) + ".csv", index_col=0), self.N), axis=1)  # Make profile for each song in input
+        df['profile'] = df.apply(lambda row: get_profile(pd.read_csv("unigram/" + str(row.name) + ".csv", index_col=0), self.N, self.ngram_type), axis=1)  # Make profile for each song in input
         logging.info('Profiles for songs made')
         logging.info('Making profiles for types')
         type_profiles = pd.DataFrame(columns=['type', 'name', 'profile'])
@@ -62,7 +63,7 @@ class LexRankLearner(Learner):
             for name, group in grouped:
                 profile = group.loc[:, 'profile'].sum()  # …and build a profile for each instance of a type (e.g. profile of a specific performer) by summing the profiles of the songs with that specific output type
                 if self.profile_size > 0:
-                    profile = profile.most_common(self.profile_size)
+                    profile = Counter(profile.most_common(self.profile_size))
                 type_profiles = type_profiles.append({'type': output_column, 'name': name, 'profile': profile}, ignore_index=True)
         logging.info('Profiles for types made')
         logging.info('Applying LexRank to profiles')
@@ -70,7 +71,6 @@ class LexRankLearner(Learner):
             importance = self.__lexrank(row['profile'], 0.01)
             mask = np.where(importance > np.mean(importance), True, False)
             flat_profile = list(row['profile'].keys())
-            # I was hoping to do this using a one-liner with np.where, but it doesn't work
             reduced_profile = []
             for i, x in enumerate(mask):
                 if x:
@@ -82,4 +82,4 @@ class LexRankLearner(Learner):
 
     def classify(self, song_df):
         """Classifier checks for each value's profile of output_column which is most similar to the song's profile (by an argmax in each group of types_grouped)"""
-        return {t: group.loc[np.argmax(group.apply(lambda row: similarity(row['profile'], get_profile(song_df, self.N)), axis=1))]['name'] for t, group in self.types_grouped}
+        return {t: group.loc[np.argmax(group.apply(lambda row: similarity(row['profile'], get_profile(song_df, self.N, self.ngram_type)), axis=1))]['name'] for t, group in self.types_grouped}

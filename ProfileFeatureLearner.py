@@ -2,6 +2,7 @@ import pandas as pd
 from sklearn.feature_extraction import DictVectorizer
 from sklearn.naive_bayes import GaussianNB
 from sklearn.linear_model import LinearRegression
+from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 import logging
 
 from Learner import Learner
@@ -29,9 +30,9 @@ class ProfileFeatureLearner(Learner):
         logging.info('Made profiles, now making and fitting learners')
         for output_name in self.output_names:
             if output_name in ['Year', 'Tempo']:
-                self.classifiers[output_name] = LinearRegression()
+                self.classifiers[output_name] = RandomForestRegressor(n_jobs=-1, n_estimators=20)
             else:
-                self.classifiers[output_name] = GaussianNB()
+                self.classifiers[output_name] = RandomForestClassifier(n_jobs=-1, n_estimators=60)
             self.classifiers[output_name].fit(training_input, df[output_name])
         logging.info('Made and fit learners')
 
