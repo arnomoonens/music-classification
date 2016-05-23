@@ -39,10 +39,10 @@ if __name__ == '__main__':
             '--pitch',
             # classifier='random forest', classifier_args={'n_estimators': 60},
             # regressor='random forest', regressor_args={'n_estimators': 20},
-            # classifier='svm', classifier_args={'C': 100},
-            # regressor='svm', regressor_args={'C': 100},
-            classifier='neural network', classifier_args={'hidden_num_units': 200, 'max_epochs': 1000},
-            regressor='neural network', regressor_args={'hidden_num_units': 200, 'max_epochs': 1000},
+            classifier='svm', classifier_args={'C': 100},
+            regressor='svm', regressor_args={'C': 100},
+            # classifier='neural network', classifier_args={'hidden_num_units': 200, 'max_epochs': 1000},
+            # regressor='neural network', regressor_args={'hidden_num_units': 200, 'max_epochs': 1000},
             column_names=column_names,
             output_names=output_names)
         learner.learn(training_data_file)

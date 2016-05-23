@@ -21,6 +21,7 @@ from nolearn.lasagne import NeuralNet
 from nolearn.lasagne.base import TrainSplit
 
 logging.getLogger("gensim").setLevel(logging.WARNING)
+logging.getLogger("theano").setLevel(logging.ERROR)
 
 class LDALearner(Learner):
     """Learner that uses Latent Dirichlet Allocation"""
