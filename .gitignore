@@ -13,3 +13,6 @@ output-file-*.csv
 
 # added by GitSavvy
 __pycache__/
+
+# added by GitSavvy
+validation-data-file-*.csv

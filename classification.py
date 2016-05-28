@@ -26,7 +26,9 @@ if __name__ == '__main__':
         test_data_file = sys.argv[2]
         output_file = sys.argv[3]
         # learner = LexRankLearner(2, -1, '--both', column_names=column_names, output_names=output_columns)
+
         # learner = ProfileLearner(1, -1, '--both', similarity=None, column_names=column_names, output_names=output_columns)
+
         # learner = LDALearner(
         #     2,
         #     '--pitch',
@@ -34,6 +36,7 @@ if __name__ == '__main__':
         #     regressor='random forest', regressor_args={'n_estimators': 20},
         #     column_names=column_names,
         #     output_names=output_names)
+
         learner = ProfileFeatureLearner(
             2,
             '--pitch',
@@ -45,6 +48,7 @@ if __name__ == '__main__':
             # regressor='neural network', regressor_args={'hidden_num_units': 200, 'max_epochs': 1000},
             column_names=column_names,
             output_names=output_names)
+        
         learner.learn(training_data_file)
         logging.info('Classifier made, now testing it.')
         results = learner.test(test_data_file)

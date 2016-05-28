@@ -21,6 +21,7 @@ from nolearn.lasagne.base import TrainSplit
 
 logging.getLogger("theano").setLevel(logging.ERROR)
 
+
 class ProfileFeatureLearner(Learner):
     """Naive bayes and linear regression learner using n-gram counts as features"""
 
