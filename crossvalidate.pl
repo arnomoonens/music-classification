@@ -14,8 +14,6 @@ open (my $fh, '<', $inputDir . '/dataset-balanced.csv');
     @lines = @lines[ 1 .. $#lines ]; #skip first line
 close($fh);
 
-
-
 # Cross-validation loop
 for ($fold=0; $fold < $noFolds; $fold++) {
     # Open training, validation and test file
@@ -68,12 +66,11 @@ for ($fold=0; $fold < $noFolds; $fold++) {
     close($validation_fh);
 
     # Run classifier
-    if ($mode == '--validate') {
-        system('./classification.py training-data-file-' . $fold .'.csv validation-data-file-' .$fold . '.csv output-file-' . $fold . '.csv');   
-    } elsif ($mode == '--test') {
+    if ($mode eq '--validate') {
+        system('./classification.py training-data-file-' . $fold .'.csv validation-data-file-' .$fold . '.csv output-file-' . $fold . '.csv');
+    } elsif ($mode eq '--test') {
         system('./classification.py training-data-file-' . $fold .'.csv test-data-file-' .$fold . '.csv output-file-' . $fold . '.csv');
     }
-    
 
     # Compare outputs with data that was stripped
     open (my $fh, '<', 'output-file-' . $fold .'.csv');
@@ -84,32 +81,31 @@ for ($fold=0; $fold < $noFolds; $fold++) {
     for $line(@lines) {
         @field = split(';', $line);
 
-        if ($mode == '--validate') {
+        if ($mode eq '--validate') {
             $performerPerformance[$fold] += !($field[0] eq $vperformer[$c]);
             $instrumentPerformance[$fold] += !($field[1] eq $vinstrument[$c]);
             $stylePerformance[$fold] += !($field[2] eq $vstyle[$c]);
             $yearPerformance[$fold] += abs($field[3] - $vyear[$c]);
             $tempoPerformance[$fold] += abs($field[4] - $vtempo[$c]);
-        } elsif ($mode == '--test') {
+        } elsif ($mode eq '--test') {
             $performerPerformance[$fold] += !($field[0] eq $tperformer[$c]);
             $instrumentPerformance[$fold] += !($field[1] eq $tinstrument[$c]);
             $stylePerformance[$fold] += !($field[2] eq $tstyle[$c]);
             $yearPerformance[$fold] += abs($field[3] - $tyear[$c]);
             $tempoPerformance[$fold] += abs($field[4] - $ttempo[$c]);
         }
-        
+
         $c=$c+1;
 
     }
 }
 
-
 # Aggregate score
 print "\n\n\n";
 print "-----------------------------------\n";
-if ($mode == '--validate') {
+if ($mode eq '--validate') {
     print "VALIDATION SET:\n";
-} elsif ($mode == '--test') {
+} elsif ($mode eq '--test') {
     print "TEST SET:\n";
 }
 print "Error performance (lower is better)\n";
@@ -119,4 +115,3 @@ print "Instrument prediction\t" . join(';', @instrumentPerformance) . " => " . s
 print "Style prediction\t" . join(';', @stylePerformance) . " => " . sum(@stylePerformance) ."\n";
 print "Year prediction\t\t" . join(';', @yearPerformance) . " => " . sum(@yearPerformance) ."\n";
 print "Tempo prediction\t" . join(';', @tempoPerformance) . " => " . sum(@tempoPerformance) ."\n";
-
